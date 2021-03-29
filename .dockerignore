@@ -1,0 +1,3 @@
+tests/*.py
+*_test.go
+runFunctionalTest.sh
