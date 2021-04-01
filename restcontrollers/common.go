@@ -25,11 +25,6 @@ const (
 	ResourceURIGetCategories         = "/get-categories"
 )
 
-const (
-	POST = "POST"
-	GET  = "GET"
-)
-
 var DataOK = "OK"
 
 type ResponseWriter struct {
@@ -79,7 +74,7 @@ func checkRequestType(requestTypeString string, w ResponseWriter, r *Request) er
 }
 
 func decodePostData(w ResponseWriter, r *Request) ([]byte, error) {
-	if err := checkRequestType(POST, w, r); err != nil {
+	if err := checkRequestType(http.MethodPost, w, r); err != nil {
 		return nil, err
 	}
 

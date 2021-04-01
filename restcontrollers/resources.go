@@ -13,7 +13,7 @@ import (
 
 func (c *RESTController) getResourceByID(w ResponseWriter, r *Request) {
 	log.Println("Getting resource by id")
-	if err := checkRequestType(GET, w, r); err != nil {
+	if err := checkRequestType(http.MethodGet, w, r); err != nil {
 		w.writeError(err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -128,7 +128,7 @@ func (c *RESTController) deleteResource(w ResponseWriter, r *Request) {
 
 func (c *RESTController) getResourcesByIDs(w ResponseWriter, r *Request) {
 	log.Println("Getting multiple resources by ids")
-	if err := checkRequestType(GET, w, r); err != nil {
+	if err := checkRequestType(http.MethodGet, w, r); err != nil {
 		w.writeError(err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -153,7 +153,7 @@ func (c *RESTController) getResourcesByIDs(w ResponseWriter, r *Request) {
 
 func (c *RESTController) getResourcesByCategory(w ResponseWriter, r *Request) {
 	log.Println("Getting multiple resources by category")
-	if err := checkRequestType(GET, w, r); err != nil {
+	if err := checkRequestType(http.MethodGet, w, r); err != nil {
 		w.writeError(err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -185,7 +185,7 @@ func (c *RESTController) getResourcesByCategory(w ResponseWriter, r *Request) {
 
 func (c *RESTController) getCategories(w ResponseWriter, r *Request) {
 	log.Println("Getting categories")
-	if err := checkRequestType(GET, w, r); err != nil {
+	if err := checkRequestType(http.MethodGet, w, r); err != nil {
 		w.writeError(err.Error(), http.StatusBadRequest)
 		return
 	}
