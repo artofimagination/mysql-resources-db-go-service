@@ -13,7 +13,7 @@ def addResource(data, httpConnection):
         response = getResponse(r.text)
         if response is None:
             return None
-        return response
+        return True
     return True
 
 
@@ -567,18 +567,18 @@ createTestData = [
                         'location': 'testLocation'
                      }
                 }, {
-                    'id': '392e195c-aab0-45d4-85d6-24f31115b93f',
-                    'category': 1,
-                    'content': {
-                        'location': 'testLocation'
-                    }
-                }, {
                     'id': '495adc20-8718-4f03-ae95-58ff88ffe8db',
                     'category': 1,
                     'content': {
                         'fee03454-438b-4c4f-8d61-6ebcc429180c':\
                         'testLocation/fee03454-438b-4c4f-\
 8d61-6ebcc429180c.bin',
+                        'location': 'testLocation'
+                    }
+                }, {
+                    'id': '392e195c-aab0-45d4-85d6-24f31115b93f',
+                    'category': 1,
+                    'content': {
                         'location': 'testLocation'
                     }
                 }, {
@@ -628,15 +628,22 @@ def test_GetResourcesByCategory(httpConnection, data, expected):
         pytest.fail("Failed to send GET request")
         return None
 
-    print(r.text)
     response = getResponse(r.text, expected)
     if response is None:
         return None
 
     expectedData = expected["data"]
-    if response != expectedData:
-        pytest.fail(
-            f"Request failed\n Returned: {response}\nExpected: {expectedData}")
+    match = False
+    for data in response:
+        match = False
+        for expectedValue in expectedData:
+            if data == expectedValue:
+                match = True
+                break
+        if match is False:
+            pytest.fail(f"Request failed\n \
+Returned: {response}\nExpected: {expectedData}")
+            return
 
 
 dataColumns = ("data", "expected")
