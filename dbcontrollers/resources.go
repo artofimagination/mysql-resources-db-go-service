@@ -93,7 +93,7 @@ func (c *MYSQLController) GetResourcesByIDs(IDs []uuid.UUID) ([]models.Resource,
 	return resources, c.DBConnector.Commit(tx)
 }
 
-func (c *MYSQLController) GetResourceByID(ID *uuid.UUID) (*models.Resource, error) {
+func (c *MYSQLController) GetResourceByID(ID uuid.UUID) (*models.Resource, error) {
 	resources, err := c.DBFunctions.GetResourceByID(ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -115,7 +115,7 @@ func (c *MYSQLController) UpdateResource(resource *models.Resource) error {
 		return mysqldb.RollbackWithErrorStack(tx, ErrResourceHasTooManyAttachements)
 	}
 
-	resourceFromDB, err := c.DBFunctions.GetResourceByID(&resource.ID)
+	resourceFromDB, err := c.DBFunctions.GetResourceByID(resource.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return mysqldb.RollbackWithErrorStack(tx, ErrResourceNotFound)

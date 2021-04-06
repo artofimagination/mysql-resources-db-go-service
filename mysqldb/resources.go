@@ -57,7 +57,7 @@ func (f *MYSQLFunctions) UpdateResource(resource *models.Resource, tx *sql.Tx) e
 
 var GetResourceByIDQuery = "SELECT BIN_TO_UUID(id), category, content FROM resources WHERE id = UUID_TO_BIN(?)"
 
-func (f *MYSQLFunctions) GetResourceByID(resourceID *uuid.UUID) (*models.Resource, error) {
+func (f *MYSQLFunctions) GetResourceByID(resourceID uuid.UUID) (*models.Resource, error) {
 	resource := &models.Resource{}
 
 	tx, err := f.DBConnector.ConnectSystem()

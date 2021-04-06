@@ -1,10 +1,12 @@
 package mysqldb
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"time"
+
+	"github.com/proemergotech/log/v3"
 
 	// Need to register mysql drivers with database/sql
 	_ "github.com/go-sql-driver/mysql"
@@ -51,7 +53,7 @@ func (c *MYSQLConnector) BootstrapSystem() error {
 			break
 		}
 		time.Sleep(1 * time.Second)
-		log.Printf("Failed to execute migration %s. Retrying...\n", err.Error())
+		log.Debug(context.Background(), "Failed to execute migration %s. Retrying...\n", err.Error())
 	}
 
 	if err != nil {
