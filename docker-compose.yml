@@ -28,3 +28,9 @@ services:
       - development
     depends_on: 
       - system-mysql
+    environment:
+      MYSQL_DB_ADDRESS: system-mysql
+      MYSQL_DB_USER: ${MYSQL_DB_USER-root}
+      MYSQL_DB_PASSWORD: ${MYSQL_DB_PASSWORD-123secure}
+      MYSQL_DB_NAME: ${MYSQL_DB_NAME-resource_database}
+      MYSQL_DB_MIGRADTION_DIR: ${MYSQL_DB_MIGRATION_DIR-$GOPATH/src/github.com/artofimagination/mysql-resources-db-go-service/db/migrations/mysql}

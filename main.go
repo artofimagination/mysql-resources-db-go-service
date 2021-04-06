@@ -12,7 +12,7 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	"github.com/artofimagination/mysql-resources-db-go-service/config"
-	"github.com/artofimagination/mysql-resources-db-go-service/init"
+	"github.com/artofimagination/mysql-resources-db-go-service/initialization"
 )
 
 type contextMapper struct{}
@@ -71,5 +71,5 @@ func main() {
 		}
 	}()
 
-	init.Execute()
+	initialization.Execute()
 }

@@ -1,18 +1,29 @@
+ARG EXECUTABLE_NAME=mysql-resources-db-go-service
+
 FROM golang:1.15.2-alpine
 
-WORKDIR $GOPATH/src/mysql-resources-db-go-service
+ENV ROOT_PACKAGE=github.com/artofimagination/$EXECUTABLE_NAME
 
-# Copy everything from the current directory to the PWD(Present Working Directory) inside the container
-COPY . .
+ADD . $GOPATH/src/$ROOT_PACKAGE
+WORKDIR $GOPATH/src/$ROOT_PACKAGE
 
 RUN apk add --update g++
 RUN go mod tidy
-RUN cd $GOPATH/src/mysql-resources-db-go-service/ && go build main.go
+RUN go build -ldflags "-X $ROOT_PACKAGE/config.AppVersion=$APP_VERSION" main.go
 
-# This container exposes port 8080 to the outside world
+FROM alpine:latest
+
+ARG EXECUTABLE_NAME
+
+RUN set -eux; \
+  apk add --no-cache ca-certificates
+
+WORKDIR /usr/local/bin/
+
+COPY --from=builder /tmp/$EXECUTABLE_NAME ./$EXECUTABLE_NAME
+RUN chmod 0766 $GOPATH/src/$ROOT_PACKAGE/scripts/init.sh
+
 EXPOSE 8080
-
-RUN chmod 0766 $GOPATH/src/mysql-resources-db-go-service/scripts/init.sh
 
 # Run the executable
 CMD ["./scripts/init.sh"]
