@@ -91,11 +91,12 @@ func newSQLDatabase(cfg *config.Config) (*sqlx.DB, error) {
 	return sqlx.Open(
 		"mysql",
 		fmt.Sprintf(
-			"%s:%s@tcp(%s:%d)/?parseTime=true&interpolateParams=true",
+			"%s:%s@tcp(%s:%d)/%s?parseTime=true&interpolateParams=true",
 			cfg.MySQLDBUser,
 			cfg.MySQLDBPassword,
 			cfg.MySQLDBAddress,
 			cfg.MySQLDBPort,
+			cfg.MySQLDBName,
 		),
 	)
 }
