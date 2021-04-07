@@ -42,6 +42,6 @@ func (mySQL *MySQL) BootstrapSystem(migrationDirectory string) error {
 	if err != nil {
 		return errors.Wrap(errors.WithStack(err), "Migration failed after multiple retries.")
 	}
-	fmt.Printf("Applied %d migrations!\n", n)
+	fmt.Printf("Applied %d migration(s)!\n", n)
 	return nil
 }
