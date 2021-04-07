@@ -6,17 +6,17 @@ import (
 
 	"github.com/proemergotech/log/v3"
 
-	"github.com/artofimagination/mysql-resources-db-go-service/dbcontrollers"
 	"github.com/artofimagination/mysql-resources-db-go-service/models"
 	httpModels "github.com/artofimagination/mysql-resources-db-go-service/models/http"
 	"github.com/artofimagination/mysql-resources-db-go-service/models/myerrors"
+	"github.com/artofimagination/mysql-resources-db-go-service/storage"
 )
 
 func (s *Service) AddResource(ctx context.Context, resource *models.Resource) error {
 	// todo: add resource should be return with the added resource
 	log.Debug(ctx, "Add resource")
 	// Execute function
-	if err := s.dbController.AddResource(resource); err != nil {
+	if err := s.mySQLStorage.AddResource(resource); err != nil {
 		return myerrors.WithFields(err, models.HTTPCode, http.StatusInternalServerError)
 	}
 
@@ -26,9 +26,9 @@ func (s *Service) AddResource(ctx context.Context, resource *models.Resource) er
 func (s *Service) GetResourceByID(ctx context.Context, req *httpModels.GetResourceByIDRequest) (*models.Resource, error) {
 	log.Debug(ctx, "Getting resource by id")
 
-	resource, err := s.dbController.GetResourceByID(req.UUID)
+	resource, err := s.mySQLStorage.GetResourceByID(req.UUID)
 	if err != nil {
-		if err.Error() == dbcontrollers.ErrResourceNotFound.Error() {
+		if err.Error() == storage.ErrResourceNotFound.Error() {
 			return nil, myerrors.WithFields(err, models.HTTPCode, http.StatusAccepted)
 		}
 		return nil, myerrors.WithFields(err, models.HTTPCode, http.StatusInternalServerError)
@@ -41,8 +41,8 @@ func (s *Service) UpdateResource(ctx context.Context, resource *models.Resource)
 	// todo: update should return with the updated resource
 	log.Debug(ctx, "Updating resource")
 
-	if err := s.dbController.UpdateResource(resource); err != nil {
-		if err.Error() == dbcontrollers.ErrResourceNotFound.Error() {
+	if err := s.mySQLStorage.UpdateResource(resource); err != nil {
+		if err.Error() == storage.ErrResourceNotFound.Error() {
 			return myerrors.WithFields(err, models.HTTPCode, http.StatusAccepted)
 		}
 		return myerrors.WithFields(err, models.HTTPCode, http.StatusInternalServerError)
@@ -54,15 +54,15 @@ func (s *Service) UpdateResource(ctx context.Context, resource *models.Resource)
 func (s *Service) DeleteResource(ctx context.Context, resource *models.Resource) error {
 	log.Debug(ctx, "Deleting resource")
 
-	if err := s.dbController.DeleteResource(resource); err != nil {
-		if err.Error() == dbcontrollers.ErrResourceNotFound.Error() {
+	if err := s.mySQLStorage.DeleteResource(resource); err != nil {
+		if err.Error() == storage.ErrResourceNotFound.Error() {
 			return myerrors.WithFields(err, models.HTTPCode, http.StatusAccepted)
 		}
 		return myerrors.WithFields(err, models.HTTPCode, http.StatusInternalServerError)
 	}
 
-	_, err := s.dbController.GetResourceByID(resource.ID)
-	if err != nil && err.Error() != dbcontrollers.ErrResourceNotFound.Error() {
+	_, err := s.mySQLStorage.GetResourceByID(resource.ID)
+	if err != nil && err.Error() != storage.ErrResourceNotFound.Error() {
 		return myerrors.WithFields(err, models.HTTPCode, http.StatusInternalServerError)
 	}
 
@@ -72,7 +72,7 @@ func (s *Service) DeleteResource(ctx context.Context, resource *models.Resource)
 func (s *Service) GetCategories(ctx context.Context) (*httpModels.CategoriesResponse, error) {
 	log.Debug(ctx, "Getting categories")
 
-	categories, err := s.dbController.GetCategories()
+	categories, err := s.mySQLStorage.GetCategories()
 	if err != nil {
 		return nil, myerrors.WithFields(err, models.HTTPCode, http.StatusInternalServerError)
 	}
@@ -85,9 +85,9 @@ func (s *Service) GetCategories(ctx context.Context) (*httpModels.CategoriesResp
 func (s *Service) GetResourcesByCategory(ctx context.Context, req *httpModels.GetResourcesByCategoryRequest) (*httpModels.ResourcesResponse, error) {
 	log.Debug(ctx, "Getting multiple resources by category")
 
-	resources, err := s.dbController.GetResourcesByCategory(req.Category)
+	resources, err := s.mySQLStorage.GetResourcesByCategory(req.Category)
 	if err != nil {
-		if err.Error() == dbcontrollers.ErrResourceNotFound.Error() {
+		if err.Error() == storage.ErrResourceNotFound.Error() {
 			return nil, myerrors.WithFields(err, models.HTTPCode, http.StatusAccepted)
 		}
 		return nil, myerrors.WithFields(err, models.HTTPCode, http.StatusInternalServerError)
@@ -99,9 +99,9 @@ func (s *Service) GetResourcesByCategory(ctx context.Context, req *httpModels.Ge
 }
 
 func (s *Service) GetResourcesByIDs(_ context.Context, req *httpModels.GetResourcesByIDsRequest) (*httpModels.ResourcesResponse, error) {
-	resources, err := s.dbController.GetResourcesByIDs(req.UUIDs)
+	resources, err := s.mySQLStorage.GetResourcesByIDs(req.UUIDs)
 	if err != nil {
-		if err.Error() == dbcontrollers.ErrResourceNotFound.Error() {
+		if err.Error() == storage.ErrResourceNotFound.Error() {
 			return nil, myerrors.WithFields(err, models.HTTPCode, http.StatusAccepted)
 		}
 		return nil, myerrors.WithFields(err, models.HTTPCode, http.StatusInternalServerError)

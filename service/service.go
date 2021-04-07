@@ -1,13 +1,15 @@
 package service
 
-import "github.com/artofimagination/mysql-resources-db-go-service/dbcontrollers"
+import (
+	"github.com/artofimagination/mysql-resources-db-go-service/storage"
+)
 
 type Service struct {
-	dbController *dbcontrollers.MYSQLController
+	mySQLStorage *storage.MySQL
 }
 
-func NewService(dbController *dbcontrollers.MYSQLController) *Service {
+func NewService(mySQLStorage *storage.MySQL) *Service {
 	return &Service{
-		dbController: dbController,
+		mySQLStorage: mySQLStorage,
 	}
 }

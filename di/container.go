@@ -1,6 +1,8 @@
 package di
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -8,20 +10,22 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/go-playground/validator/v10/non-standard/validators"
+	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
 	"github.com/proemergotech/log/v3"
 	"github.com/proemergotech/log/v3/echolog"
 
 	"github.com/artofimagination/mysql-resources-db-go-service/config"
-	"github.com/artofimagination/mysql-resources-db-go-service/dbcontrollers"
 	"github.com/artofimagination/mysql-resources-db-go-service/rest"
 	"github.com/artofimagination/mysql-resources-db-go-service/service"
+	"github.com/artofimagination/mysql-resources-db-go-service/storage"
 	"github.com/artofimagination/mysql-resources-db-go-service/validation"
 )
 
 type Container struct {
 	RestServer *rest.Server
+	database   *sqlx.DB
 }
 
 func NewContainer(cfg *config.Config) (*Container, error) {
@@ -32,20 +36,21 @@ func NewContainer(cfg *config.Config) (*Container, error) {
 		return nil, errors.Wrap(err, "cannot initialize validator")
 	}
 
-	dbController, err := dbcontrollers.NewDBController(
-		cfg.MySQLDBAddress,
-		cfg.MySQLDBPort,
-		cfg.MySQLDBUser,
-		cfg.MySQLDBPassword,
-		cfg.MySQLDBName,
-		cfg.MySQLDBMigrationDirectory)
+	c.database, err = newSQLDatabase(cfg)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "cannot initialize MySQL database")
+	}
+
+	mysqlStorage := storage.NewMySQL(c.database)
+
+	err = mysqlStorage.BootstrapSystem(cfg.MySQLDBMigrationDirectory)
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot bootstrap MySQL database")
 	}
 
 	echoEngine := newEcho(cfg.Port, v, rest.DLiveRHTTPErrorHandler)
 
-	svc := service.NewService(dbController)
+	svc := service.NewService(mysqlStorage)
 
 	c.RestServer = rest.NewServer(
 		echoEngine,
@@ -82,6 +87,19 @@ func NewValidator() (*validation.Validator, error) {
 	return validation.NewValidator(v), nil
 }
 
+func newSQLDatabase(cfg *config.Config) (*sqlx.DB, error) {
+	return sqlx.Open(
+		"mysql",
+		fmt.Sprintf(
+			"%s:%s@tcp(%s:%d)/?parseTime=true&interpolateParams=true",
+			cfg.MySQLDBUser,
+			cfg.MySQLDBPassword,
+			cfg.MySQLDBAddress,
+			cfg.MySQLDBPort,
+		),
+	)
+}
+
 func newEcho(port int, validator *validation.Validator, httpErrorHandler echo.HTTPErrorHandler) *echo.Echo {
 	e := echo.New()
 
@@ -100,5 +118,8 @@ func newEcho(port int, validator *validation.Validator, httpErrorHandler echo.HT
 }
 
 func (c *Container) Close() {
-
+	if err := c.database.Close(); err != nil {
+		err = errors.Wrap(err, "Database graceful close failed")
+		log.Warn(context.Background(), err.Error(), "error", err)
+	}
 }

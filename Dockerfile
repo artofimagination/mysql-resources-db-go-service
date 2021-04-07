@@ -1,6 +1,6 @@
 ARG EXECUTABLE_NAME=mysql-resources-db-go-service
 
-FROM golang:1.15.2-alpine
+FROM golang:1.15.2-alpine AS builder
 
 ENV ROOT_PACKAGE=github.com/artofimagination/$EXECUTABLE_NAME
 

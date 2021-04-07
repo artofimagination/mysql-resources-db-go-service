@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/pkg/errors"
 	"github.com/proemergotech/log/v3"
 	"github.com/proemergotech/log/v3/zaplog"
