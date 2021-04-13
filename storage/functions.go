@@ -1,14 +1,12 @@
 package storage
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 	"strings"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"github.com/proemergotech/log/v3"
 
 	"github.com/artofimagination/mysql-resources-db-go-service/models"
 )
@@ -31,7 +29,6 @@ func rollbackWithErrorStack(tx *sql.Tx, errorStack error) error {
 }
 
 func addResource(resource *models.Resource, tx *sql.Tx) error {
-	log.Info(context.Background(), "add_resource", "resource", resource)
 	// Execute transaction
 	_, err := tx.Exec(addResourceQuery, resource.ID, resource.Category, resource.Content)
 	if err != nil {
@@ -43,7 +40,7 @@ func addResource(resource *models.Resource, tx *sql.Tx) error {
 
 const updateResourceQuery = `
 	UPDATE resources 
-	SET content = ?, category = ? 
+	SET content = CAST(CONVERT(? USING utf8) AS JSON), category = ? 
 	WHERE id = UUID_TO_BIN(?)
 `
 

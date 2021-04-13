@@ -154,13 +154,13 @@ func (mySQL *MySQL) UpdateResource(resource *models.Resource) error {
 	return tx.Commit()
 }
 
-func (mySQL *MySQL) DeleteResource(resource *models.Resource) error {
+func (mySQL *MySQL) DeleteResource(id uuid.UUID, content models.ContentMap) error {
 	tx, err := mySQL.db.Begin()
 	if err != nil {
 		return err
 	}
 
-	for k := range resource.Content {
+	for k := range content {
 		if k != models.LocationKey {
 			if err := deleteResource(k, tx); err != nil {
 				if err == ErrResourcesMissing {
@@ -171,7 +171,7 @@ func (mySQL *MySQL) DeleteResource(resource *models.Resource) error {
 		}
 	}
 
-	if err := deleteResource(resource.ID.String(), tx); err != nil {
+	if err := deleteResource(id.String(), tx); err != nil {
 		if err == ErrResourcesMissing {
 			return ErrResourceNotFound
 		}

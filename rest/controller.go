@@ -34,6 +34,8 @@ func NewController(
 }
 
 func (c *controller) Start() {
+
+	c.echoEngine.Use(echolog.DebugMiddleware(log.GlobalLogger(), true, true))
 	if c.debugPProf {
 		runtime.SetBlockProfileRate(1)
 		runtime.SetMutexProfileFraction(5)
@@ -63,16 +65,16 @@ func (c *controller) Start() {
 			return errors.Wrap(err, "request failed on validation")
 		}
 
-		err := c.svc.AddResource(eCtx.Request().Context(), resource)
+		_, err := c.svc.AddResource(eCtx.Request().Context(), resource)
 		if err != nil {
 			return err
 		}
 
-		return eCtx.String(http.StatusCreated, "OK")
+		return eCtx.JSON(http.StatusCreated, httpModels.ResponseData{Data: "OK"})
 	})
 
 	c.echoEngine.GET("/get-resource-by-id", func(eCtx echo.Context) error {
-		req := &httpModels.GetResourceByIDRequest{}
+		req := &httpModels.GetResourceByIDWithQueryRequest{}
 		if err := eCtx.Bind(req); err != nil {
 			return err
 		}
@@ -81,15 +83,15 @@ func (c *controller) Start() {
 			return err
 		}
 
-		resp, err := c.svc.GetResourceByID(eCtx.Request().Context(), req)
+		resp, err := c.svc.GetResourceByID(eCtx.Request().Context(), req.UUID)
 		if err != nil {
 			return err
 		}
 
-		return eCtx.JSON(http.StatusOK, resp)
+		return eCtx.JSON(http.StatusOK, httpModels.ResponseData{Data: resp})
 	})
 
-	c.echoEngine.PATCH("/update-resource", func(eCtx echo.Context) error {
+	c.echoEngine.POST("/update-resource", func(eCtx echo.Context) error { // todo: should be PATCH
 		resource := &models.Resource{}
 		if err := eCtx.Bind(resource); err != nil {
 			return err
@@ -104,25 +106,25 @@ func (c *controller) Start() {
 			return err
 		}
 
-		return eCtx.String(http.StatusCreated, "OK") // todo: should be StatusOK
+		return eCtx.JSON(http.StatusCreated, httpModels.ResponseData{Data: "OK"}) // todo: should be StatusOK
 	})
 
-	c.echoEngine.DELETE("/delete-resource", func(eCtx echo.Context) error {
-		resource := &models.Resource{}
-		if err := eCtx.Bind(resource); err != nil {
+	c.echoEngine.POST("/delete-resource", func(eCtx echo.Context) error { // todo: should be DELETE
+		req := &httpModels.DeleteResourceRequest{}
+		if err := eCtx.Bind(req); err != nil {
 			return err
 		}
 
-		if err := eCtx.Validate(resource); err != nil {
+		if err := eCtx.Validate(req); err != nil {
 			return err
 		}
 
-		err := c.svc.DeleteResource(eCtx.Request().Context(), resource)
+		err := c.svc.DeleteResource(eCtx.Request().Context(), req)
 		if err != nil {
 			return err
 		}
 
-		return eCtx.String(http.StatusOK, "OK")
+		return eCtx.JSON(http.StatusOK, httpModels.ResponseData{Data: "OK"})
 	})
 
 	c.echoEngine.GET("/get-categories", func(eCtx echo.Context) error {
@@ -131,7 +133,7 @@ func (c *controller) Start() {
 			return err
 		}
 
-		return eCtx.JSON(http.StatusOK, resp)
+		return eCtx.JSON(http.StatusOK, httpModels.ResponseData{Data: resp})
 	})
 
 	c.echoEngine.GET("/get-resources-by-ids", func(eCtx echo.Context) error {
@@ -149,7 +151,7 @@ func (c *controller) Start() {
 			return err
 		}
 
-		return eCtx.JSON(http.StatusOK, resp)
+		return eCtx.JSON(http.StatusOK, httpModels.ResponseData{Data: resp})
 	})
 
 	c.echoEngine.GET("/get-resources-by-category", func(eCtx echo.Context) error {
@@ -167,7 +169,7 @@ func (c *controller) Start() {
 			return err
 		}
 
-		return eCtx.JSON(http.StatusOK, resp)
+		return eCtx.JSON(http.StatusOK, httpModels.ResponseData{Data: resp})
 	})
 
 	// todo: use new endpoint format to follow REST and CRUD basics
@@ -185,7 +187,7 @@ func (c *controller) Start() {
 			return err
 		}
 
-		resp, err := c.svc.GetResourceByID(eCtx.Request().Context(), req)
+		resp, err := c.svc.GetResourceByID(eCtx.Request().Context(), req.UUID)
 		if err != nil {
 			return err
 		}
@@ -203,7 +205,7 @@ func (c *controller) Start() {
 			return err
 		}
 
-		err := c.svc.AddResource(eCtx.Request().Context(), req.Resource)
+		_, err := c.svc.AddResource(eCtx.Request().Context(), req.Resource)
 		if err != nil {
 			return err
 		}

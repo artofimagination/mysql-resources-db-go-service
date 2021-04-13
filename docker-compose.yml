@@ -30,6 +30,7 @@ services:
     depends_on: 
       - system-mysql
     environment:
+      LOG_LEVEL: debug
       MYSQL_DB_ADDRESS: system-mysql
       MYSQL_DB_USER: ${MYSQL_DB_USER-root}
       MYSQL_DB_PORT: ${MYSQL_DB_PORT}

@@ -36,7 +36,7 @@ func (mySQL *MySQL) BootstrapSystem(migrationDirectory string) error {
 			break
 		}
 		time.Sleep(time.Second)
-		log.Debug(context.Background(), "Failed to execute migration %s. Retrying...\n", err.Error())
+		log.Debug(context.Background(), "Failed to execute migration %s. Retrying...\n", "err", err.Error())
 	}
 
 	if err != nil {
