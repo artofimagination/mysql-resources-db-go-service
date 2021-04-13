@@ -6,6 +6,7 @@ import (
 	"runtime"
 
 	"github.com/labstack/echo/v4"
+	"github.com/pkg/errors"
 	"github.com/proemergotech/log/v3"
 	"github.com/proemergotech/log/v3/echolog"
 
@@ -49,17 +50,17 @@ func (c *controller) Start() {
 	})
 
 	c.echoEngine.GET("/healthcheck", func(eCtx echo.Context) error {
-		return eCtx.String(http.StatusOK, "ok")
+		return eCtx.NoContent(http.StatusOK)
 	})
 
 	c.echoEngine.POST("/add-resource", func(eCtx echo.Context) error {
 		resource := &models.Resource{}
 		if err := eCtx.Bind(resource); err != nil {
-			return err
+			return errors.Wrap(err, "cannot bind request")
 		}
 
 		if err := eCtx.Validate(resource); err != nil {
-			return err
+			return errors.Wrap(err, "request failed on validation")
 		}
 
 		err := c.svc.AddResource(eCtx.Request().Context(), resource)

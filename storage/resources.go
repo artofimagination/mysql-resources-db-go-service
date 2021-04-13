@@ -23,27 +23,27 @@ func (mySQL *MySQL) AddResource(resource *models.Resource) (err error) {
 
 	tx, err := mySQL.db.Begin()
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	category, err := mySQL.getCategoryByName(models.CategoryContent)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	if len(resource.Content) > MaxContentItems {
-		return ErrResourceHasTooManyAttachments
+		return errors.WithStack(ErrResourceHasTooManyAttachments)
 	}
 
 	for k, v := range resource.Content {
 		if k != models.LocationKey {
 			resourceItem, err := models.NewResource(k, category.ID, v)
 			if err != nil {
-				return err
+				return errors.WithStack(err)
 			}
 			if err := addResource(resourceItem, tx); err != nil {
 				if strings.Contains(err.Error(), ErrDuplicateEntrySubString) {
-					return ErrResourceAlreadyExists
+					return errors.WithStack(ErrResourceAlreadyExists)
 				}
 				return err
 			}
@@ -52,9 +52,9 @@ func (mySQL *MySQL) AddResource(resource *models.Resource) (err error) {
 
 	if err := addResource(resource, tx); err != nil {
 		if strings.Contains(err.Error(), ErrDuplicateEntrySubString) {
-			return ErrResourceAlreadyExists
+			return errors.WithStack(ErrResourceAlreadyExists)
 		}
-		return err
+		return errors.WithStack(err)
 	}
 
 	return tx.Commit()
@@ -113,27 +113,27 @@ func (mySQL *MySQL) UpdateResource(resource *models.Resource) error {
 	}
 
 	if len(resource.Content) > MaxContentItems {
-		return rollbackWithErrorStack(tx, ErrResourceHasTooManyAttachments)
+		return rollbackWithErrorStack(tx, errors.WithStack(ErrResourceHasTooManyAttachments))
 	}
 
 	resourceFromDB, err := mySQL.getResourceByID(resource.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return rollbackWithErrorStack(tx, ErrResourceNotFound)
+			return rollbackWithErrorStack(tx, errors.WithStack(ErrResourceNotFound))
 		}
 		return err
 	}
 
 	category, err := mySQL.getCategoryByName(models.CategoryContent)
 	if err != nil {
-		return rollbackWithErrorStack(tx, err)
+		return rollbackWithErrorStack(tx, errors.WithStack(err))
 	}
 
 	for k, v := range resource.Content {
 		if _, ok := resourceFromDB.Content[k]; !ok {
 			resourceItem, err := models.NewResource(k, category.ID, v)
 			if err != nil {
-				return rollbackWithErrorStack(tx, err)
+				return rollbackWithErrorStack(tx, errors.WithStack(err))
 			}
 			if err := addResource(resourceItem, tx); err != nil {
 				if strings.Contains(err.Error(), ErrDuplicateEntrySubString) {

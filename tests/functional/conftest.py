@@ -7,10 +7,11 @@ class HTTPConnector():
     def __init__(self):
         self.URL = "http://127.0.0.1:8080"
         connected = False
-        timeout = 15
+        timeout = 30
         while timeout > 0:
             try:
-                r = self.GET("/", "")
+                r = self.GET("/healthcheck", "")
+                print(r)
                 if r.status_code == 200:
                     connected = True
                     break

@@ -42,6 +42,6 @@ func DLiveRHTTPErrorHandler(err error, eCtx echo.Context) {
 	}
 
 	_ = eCtx.JSON(statusCode, httpModels.ResponseData{
-		Error: err.Error(),
+		Error: errors.WithStack(err).Error(),
 	})
 }

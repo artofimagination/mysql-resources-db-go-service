@@ -1,13 +1,14 @@
 package storage
 
 import (
+	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"github.com/proemergotech/log/v3"
 
 	"github.com/artofimagination/mysql-resources-db-go-service/models"
 )
@@ -16,10 +17,9 @@ var ErrResourcesMissing = errors.New("This resources is missing or old value is 
 
 const addResourceQuery = `
 	INSERT INTO 
-	resources 
-	(id, category, content) 
+	resources(id, category, content) 
 	VALUES 
-	(UUID_TO_BIN(?), ?, ?)
+	(UUID_TO_BIN(?), ?, CAST(CONVERT(? USING utf8) AS JSON))
 `
 
 func rollbackWithErrorStack(tx *sql.Tx, errorStack error) error {
@@ -31,16 +31,11 @@ func rollbackWithErrorStack(tx *sql.Tx, errorStack error) error {
 }
 
 func addResource(resource *models.Resource, tx *sql.Tx) error {
-	// Prepare data
-	binary, err := json.Marshal(resource.Content)
-	if err != nil {
-		return rollbackWithErrorStack(tx, err)
-	}
-
+	log.Info(context.Background(), "add_resource", "resource", resource)
 	// Execute transaction
-	_, err = tx.Exec(addResourceQuery, resource.ID, resource.Category, binary)
+	_, err := tx.Exec(addResourceQuery, resource.ID, resource.Category, resource.Content)
 	if err != nil {
-		return rollbackWithErrorStack(tx, err)
+		return rollbackWithErrorStack(tx, errors.WithStack(err))
 	}
 
 	return nil
@@ -53,23 +48,18 @@ const updateResourceQuery = `
 `
 
 func updateResource(resource *models.Resource, tx *sql.Tx) error {
-	binary, err := json.Marshal(resource.Content)
+	result, err := tx.Exec(updateResourceQuery, resource.Content, resource.Category, resource.ID)
 	if err != nil {
-		return err
-	}
-
-	result, err := tx.Exec(updateResourceQuery, binary, resource.Category, resource.ID)
-	if err != nil {
-		return rollbackWithErrorStack(tx, err)
+		return rollbackWithErrorStack(tx, errors.WithStack(err))
 	}
 
 	affected, err := result.RowsAffected()
 	if err != nil {
-		return rollbackWithErrorStack(tx, err)
+		return rollbackWithErrorStack(tx, errors.WithStack(err))
 	}
 
 	if affected == 0 {
-		return rollbackWithErrorStack(tx, ErrResourcesMissing)
+		return rollbackWithErrorStack(tx, errors.WithStack(ErrResourcesMissing))
 	}
 
 	return nil
@@ -91,8 +81,7 @@ func (mySQL *MySQL) getResourceByID(resourceID uuid.UUID) (*models.Resource, err
 
 	result := tx.QueryRow(getResourceByIDQuery, resourceID)
 
-	content := []byte{}
-	err = result.Scan(&resource.ID, &resource.Category, &content)
+	err = result.Scan(&resource.ID, &resource.Category, &resource.Content)
 	switch {
 	case err == sql.ErrNoRows:
 		if errRb := tx.Commit(); errRb != nil {
@@ -100,12 +89,8 @@ func (mySQL *MySQL) getResourceByID(resourceID uuid.UUID) (*models.Resource, err
 		}
 		return nil, sql.ErrNoRows
 	case err != nil:
-		return nil, rollbackWithErrorStack(tx, err)
+		return nil, rollbackWithErrorStack(tx, errors.WithStack(err))
 	default:
-	}
-
-	if err := json.Unmarshal(content, &resource.Content); err != nil {
-		return nil, rollbackWithErrorStack(tx, err)
 	}
 
 	return resource, tx.Commit()
@@ -119,16 +104,16 @@ const deleteResourceQuery = `
 func deleteResource(resourceID string, tx *sql.Tx) error {
 	result, err := tx.Exec(deleteResourceQuery, resourceID)
 	if err != nil {
-		return rollbackWithErrorStack(tx, err)
+		return rollbackWithErrorStack(tx, errors.WithStack(err))
 	}
 
 	affected, err := result.RowsAffected()
 	if err != nil {
-		return rollbackWithErrorStack(tx, err)
+		return rollbackWithErrorStack(tx, errors.WithStack(err))
 	}
 
 	if affected == 0 {
-		return rollbackWithErrorStack(tx, ErrResourcesMissing)
+		return rollbackWithErrorStack(tx, errors.WithStack(ErrResourcesMissing))
 	}
 	return nil
 }
@@ -143,7 +128,7 @@ func getResourcesByIDs(IDs []uuid.UUID, tx *sql.Tx) ([]models.Resource, error) {
 	}
 	rows, err := tx.Query(query, interfaceList...)
 	if err != nil {
-		return nil, rollbackWithErrorStack(tx, err)
+		return nil, rollbackWithErrorStack(tx, errors.WithStack(err))
 	}
 
 	defer func() {
@@ -152,20 +137,16 @@ func getResourcesByIDs(IDs []uuid.UUID, tx *sql.Tx) ([]models.Resource, error) {
 
 	resources := make([]models.Resource, 0)
 	for rows.Next() {
-		content := []byte{}
 		resource := models.Resource{}
-		err := rows.Scan(&resource.ID, &resource.Category, &content)
+		err := rows.Scan(&resource.ID, &resource.Category, &resource.Content)
 		if err != nil {
-			return nil, rollbackWithErrorStack(tx, err)
-		}
-		if err := json.Unmarshal(content, &resource.Content); err != nil {
-			return nil, rollbackWithErrorStack(tx, err)
+			return nil, rollbackWithErrorStack(tx, errors.WithStack(err))
 		}
 		resources = append(resources, resource)
 	}
 	err = rows.Err()
 	if err != nil {
-		return nil, rollbackWithErrorStack(tx, err)
+		return nil, rollbackWithErrorStack(tx, errors.WithStack(err))
 	}
 
 	if len(resources) == 0 {
@@ -185,7 +166,7 @@ const getResourceByCategoryQuery = `
 func getResourcesByCategory(category int, tx *sql.Tx) ([]models.Resource, error) {
 	rows, err := tx.Query(getResourceByCategoryQuery, category)
 	if err != nil {
-		return nil, rollbackWithErrorStack(tx, err)
+		return nil, rollbackWithErrorStack(tx, errors.WithStack(err))
 	}
 
 	defer func() {
@@ -194,20 +175,16 @@ func getResourcesByCategory(category int, tx *sql.Tx) ([]models.Resource, error)
 
 	resources := make([]models.Resource, 0)
 	for rows.Next() {
-		content := []byte{}
 		resource := models.Resource{}
-		err := rows.Scan(&resource.ID, &resource.Category, &content)
+		err := rows.Scan(&resource.ID, &resource.Category, &resource.Content)
 		if err != nil {
-			return nil, rollbackWithErrorStack(tx, err)
-		}
-		if err := json.Unmarshal(content, &resource.Content); err != nil {
-			return nil, rollbackWithErrorStack(tx, err)
+			return nil, rollbackWithErrorStack(tx, errors.WithStack(err))
 		}
 		resources = append(resources, resource)
 	}
 	err = rows.Err()
 	if err != nil {
-		return nil, rollbackWithErrorStack(tx, err)
+		return nil, rollbackWithErrorStack(tx, errors.WithStack(err))
 	}
 
 	if len(resources) == 0 {
@@ -224,7 +201,7 @@ func (mySQL *MySQL) getCategoryByName(name string) (*models.Category, error) {
 
 	tx, err := mySQL.db.Begin()
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	result := tx.QueryRow(GetCategoryByNameQuery, name)
@@ -233,11 +210,11 @@ func (mySQL *MySQL) getCategoryByName(name string) (*models.Category, error) {
 	switch {
 	case err == sql.ErrNoRows:
 		if errRb := tx.Commit(); errRb != nil {
-			return nil, err
+			return nil, errors.WithStack(err)
 		}
 		return nil, sql.ErrNoRows
 	case err != nil:
-		return nil, rollbackWithErrorStack(tx, err)
+		return nil, rollbackWithErrorStack(tx, errors.WithStack(err))
 	default:
 	}
 
@@ -267,7 +244,7 @@ func (mySQL *MySQL) GetCategoryByID(id int) (*models.Category, error) {
 		}
 		return nil, sql.ErrNoRows
 	case err != nil:
-		return nil, rollbackWithErrorStack(tx, err)
+		return nil, rollbackWithErrorStack(tx, errors.WithStack(err))
 	default:
 	}
 
@@ -287,7 +264,7 @@ func (mySQL *MySQL) getCategories() ([]models.Category, error) {
 
 	rows, err := tx.Query(getCategorsQuery)
 	if err != nil {
-		return nil, rollbackWithErrorStack(tx, err)
+		return nil, rollbackWithErrorStack(tx, errors.WithStack(err))
 	}
 
 	defer func() {
@@ -299,13 +276,13 @@ func (mySQL *MySQL) getCategories() ([]models.Category, error) {
 		category := models.Category{}
 		err := rows.Scan(&category.ID, &category.Name, &category.Description)
 		if err != nil {
-			return nil, rollbackWithErrorStack(tx, err)
+			return nil, rollbackWithErrorStack(tx, errors.WithStack(err))
 		}
 		categories = append(categories, category)
 	}
 	err = rows.Err()
 	if err != nil {
-		return nil, rollbackWithErrorStack(tx, err)
+		return nil, rollbackWithErrorStack(tx, errors.WithStack(err))
 	}
 
 	if len(categories) == 0 {

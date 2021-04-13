@@ -2,5 +2,6 @@ user-settings
 .env
 __pycache__
 .pytest_cache
+*.out
 latest_logs
 archived_logs

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/pkg/errors"
 	"github.com/proemergotech/log/v3"
 
 	"github.com/artofimagination/mysql-resources-db-go-service/models"
@@ -17,7 +18,7 @@ func (s *Service) AddResource(ctx context.Context, resource *models.Resource) er
 	log.Debug(ctx, "Add resource")
 	// Execute function
 	if err := s.mySQLStorage.AddResource(resource); err != nil {
-		return myerrors.WithFields(err, models.HTTPCode, http.StatusInternalServerError)
+		return myerrors.WithFields(errors.Wrap(err, "mysql error"), models.HTTPCode, http.StatusInternalServerError)
 	}
 
 	return nil
