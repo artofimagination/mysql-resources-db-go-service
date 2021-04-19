@@ -7,6 +7,7 @@ import (
 )
 
 type AddResourceRequest struct {
+	UUID     uuid.UUID        `param:"resource_id" validate:"required,uuid"`
 	Resource *models.Resource `json:"resource"`
 }
 
@@ -16,11 +17,11 @@ type GetResourceByIDWithQueryRequest struct {
 }
 
 type GetResourceByIDRequest struct {
-	UUID uuid.UUID `json:"resource_id" validate:"required,uuid"`
+	UUID uuid.UUID `json:"resource_id" param:"resource_id" validate:"required,uuid"`
 }
 
 type GetResourcesByCategoryRequest struct {
-	Category int `query:"category" validate:"required"`
+	Category int `query:"category" param:"category" validate:"required"`
 }
 
 type GetResourcesByIDsRequest struct {
@@ -28,7 +29,7 @@ type GetResourcesByIDsRequest struct {
 }
 
 type DeleteResourceRequest struct {
-	ID       uuid.UUID         `json:"id" validate:"required"`
+	ID       uuid.UUID         `json:"id" param:"resource_id" validate:"required"`
 	Category int               `json:"category"`
 	Content  models.ContentMap `json:"content"`
 }

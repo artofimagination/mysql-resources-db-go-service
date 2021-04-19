@@ -91,7 +91,7 @@ func (c *controller) Start() {
 		return eCtx.JSON(http.StatusOK, httpModels.ResponseData{Data: resp})
 	})
 
-	c.echoEngine.POST("/update-resource", func(eCtx echo.Context) error { // todo: should be PATCH
+	c.echoEngine.POST("/update-resource", func(eCtx echo.Context) error {
 		resource := &models.Resource{}
 		if err := eCtx.Bind(resource); err != nil {
 			return err
@@ -106,10 +106,10 @@ func (c *controller) Start() {
 			return err
 		}
 
-		return eCtx.JSON(http.StatusCreated, httpModels.ResponseData{Data: "OK"}) // todo: should be StatusOK
+		return eCtx.JSON(http.StatusCreated, httpModels.ResponseData{Data: "OK"})
 	})
 
-	c.echoEngine.POST("/delete-resource", func(eCtx echo.Context) error { // todo: should be DELETE
+	c.echoEngine.POST("/delete-resource", func(eCtx echo.Context) error {
 		req := &httpModels.DeleteResourceRequest{}
 		if err := eCtx.Bind(req); err != nil {
 			return err
@@ -172,12 +172,49 @@ func (c *controller) Start() {
 		return eCtx.JSON(http.StatusOK, httpModels.ResponseData{Data: resp})
 	})
 
-	// todo: use new endpoint format to follow REST and CRUD basics
+	// new endpoint format follows REST and CRUD basics
 	apiRoutes := c.echoEngine.Group("/api/v1")
 	apiRoutes.Use(echolog.DebugMiddleware(log.GlobalLogger(), true, true))
 
-	crudRoutes := apiRoutes.Group("/resources/:resource_id")
-	crudRoutes.GET("/", func(eCtx echo.Context) error {
+	resourcesRoutes := apiRoutes.Group("/resources")
+	resourcesRoutes.GET("/", func(eCtx echo.Context) error {
+		req := &httpModels.GetResourcesByIDsRequest{}
+		if err := eCtx.Bind(req); err != nil {
+			return err
+		}
+
+		if err := eCtx.Validate(req); err != nil {
+			return err
+		}
+
+		resp, err := c.svc.GetResourcesByIDs(eCtx.Request().Context(), req)
+		if err != nil {
+			return err
+		}
+
+		return eCtx.JSON(http.StatusOK, httpModels.ResponseData{Data: resp})
+	})
+
+	resourcesRoutes.GET("/categories/:category", func(eCtx echo.Context) error {
+		req := &httpModels.GetResourcesByCategoryRequest{}
+		if err := eCtx.Bind(req); err != nil {
+			return err
+		}
+
+		if err := eCtx.Validate(req); err != nil {
+			return err
+		}
+
+		resp, err := c.svc.GetResourcesByCategory(eCtx.Request().Context(), req)
+		if err != nil {
+			return err
+		}
+
+		return eCtx.JSON(http.StatusOK, httpModels.ResponseData{Data: resp})
+	})
+
+	resourcesCRUDRoutes := resourcesRoutes.Group("/:resource_id")
+	resourcesCRUDRoutes.GET("/", func(eCtx echo.Context) error {
 		req := &httpModels.GetResourceByIDRequest{}
 		if err := eCtx.Bind(req); err != nil {
 			return err
@@ -195,7 +232,7 @@ func (c *controller) Start() {
 		return eCtx.JSON(http.StatusOK, resp)
 	})
 
-	crudRoutes.POST("/", func(eCtx echo.Context) error {
+	resourcesCRUDRoutes.POST("/", func(eCtx echo.Context) error {
 		req := &httpModels.AddResourceRequest{}
 		if err := eCtx.Bind(req); err != nil {
 			return err
@@ -205,12 +242,57 @@ func (c *controller) Start() {
 			return err
 		}
 
-		_, err := c.svc.AddResource(eCtx.Request().Context(), req.Resource)
+		resp, err := c.svc.AddResource(eCtx.Request().Context(), req.Resource)
 		if err != nil {
 			return err
 		}
 
-		return eCtx.String(http.StatusOK, "OK")
+		return eCtx.JSON(http.StatusOK, resp) // todo: if the resource not exists should be created and return with StatusCreated
 	})
 
+	resourcesCRUDRoutes.PUT("/", func(eCtx echo.Context) error {
+		resource := &models.Resource{}
+		if err := eCtx.Bind(resource); err != nil {
+			return err
+		}
+
+		if err := eCtx.Validate(resource); err != nil {
+			return err
+		}
+
+		err := c.svc.UpdateResource(eCtx.Request().Context(), resource)
+		if err != nil {
+			return err
+		}
+
+		return eCtx.NoContent(http.StatusCreated) // todo: updated Resource should be returned
+	})
+
+	resourcesCRUDRoutes.DELETE("/", func(eCtx echo.Context) error {
+		req := &httpModels.DeleteResourceRequest{}
+		if err := eCtx.Bind(req); err != nil {
+			return err
+		}
+
+		if err := eCtx.Validate(req); err != nil {
+			return err
+		}
+
+		err := c.svc.DeleteResource(eCtx.Request().Context(), req)
+		if err != nil {
+			return err
+		}
+
+		return eCtx.NoContent(http.StatusOK)
+	})
+
+	categoryRoutes := apiRoutes.Group("/categories")
+	categoryRoutes.GET("/", func(eCtx echo.Context) error {
+		resp, err := c.svc.GetCategories(eCtx.Request().Context())
+		if err != nil {
+			return err
+		}
+
+		return eCtx.JSON(http.StatusOK, httpModels.ResponseData{Data: resp})
+	})
 }

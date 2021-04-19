@@ -38,7 +38,6 @@ func (s *Service) GetResourceByID(ctx context.Context, resourceID uuid.UUID) (*m
 }
 
 func (s *Service) UpdateResource(ctx context.Context, resource *models.Resource) error {
-	// todo: update should return with the updated resource
 	log.Debug(ctx, "Updating resource")
 
 	if err := s.mySQLStorage.UpdateResource(resource); err != nil {
