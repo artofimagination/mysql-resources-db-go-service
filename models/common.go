@@ -5,6 +5,8 @@ import (
 	"fmt"
 )
 
+const HTTPCode = "http_code"
+
 // PrettyPrint logs maps and structs in formatted way in the console.
 func PrettyPrint(v interface{}) {
 	b, err := json.MarshalIndent(v, "", "  ")

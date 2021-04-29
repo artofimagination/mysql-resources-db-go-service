@@ -78,7 +78,7 @@ createTestData = [
         # Expected
         {
           "data": "",
-          "error": "The resource already exists",
+          "error": "mysql error: The resource already exists",
         }),
     (
         # Input data
@@ -98,7 +98,7 @@ createTestData = [
         # Expected
         {
             "data": "",
-            "error": "The resource has too many attachements",
+            "error": "mysql error: The resource has too many attachements",
         })
 ]
 
@@ -108,6 +108,8 @@ ids = ['Success', 'Failure', 'Too many attachements']
 @pytest.mark.parametrize(dataColumns, createTestData, ids=ids)
 def test_AddResource(httpConnection, data, expected):
     try:
+        print("data to send:\n")
+        print(data["resources"])
         r = httpConnection.POST("/add-resource", data["resources"])
     except Exception:
         pytest.fail("Failed to send POST request")
@@ -132,6 +134,8 @@ def test_AddResource(httpConnection, data, expected):
         return None
 
     try:
+        print("data to send:\n")
+        print(dataToSend)
         r = httpConnection.GET("/get-resource-by-id", dataToSend)
     except Exception:
         pytest.fail("Failed to send GET request")
@@ -203,6 +207,8 @@ def test_GetResourceByID(httpConnection, data, expected):
         return None
 
     try:
+        print("data to send:\n")
+        print(dataToSend)
         r = httpConnection.GET("/get-resource-by-id", dataToSend)
     except Exception:
         pytest.fail("Failed to send GET request")
@@ -319,6 +325,8 @@ def test_UpdateResource(httpConnection, data, expected):
 
     # Check update
     try:
+        print("data to send:\n")
+        print(dataToSend)
         r = httpConnection.POST("/update-resource", dataToSend)
     except Exception:
         pytest.fail("Failed to send POST request")
@@ -343,6 +351,8 @@ def test_UpdateResource(httpConnection, data, expected):
         return None
 
     try:
+        print("data to send:\n")
+        print(dataToSend)
         r = httpConnection.GET("/get-resource-by-id", dataToSend)
     except Exception:
         pytest.fail("Failed to send GET request")
@@ -367,6 +377,8 @@ def test_UpdateResource(httpConnection, data, expected):
         return None
 
     try:
+        print("data to send:\n")
+        print(dataToSend)
         r = httpConnection.GET("/get-resource-by-id", dataToSend)
     except Exception:
         pytest.fail("Failed to send GET request")
@@ -432,6 +444,8 @@ def test_DeleteResource(httpConnection, data, expected):
         return None
 
     try:
+        print("data to send:\n")
+        print(dataToSend)
         r = httpConnection.POST("/delete-resource", dataToSend)
     except Exception:
         pytest.fail("Failed to send POST request")
@@ -526,6 +540,8 @@ def test_GetResourcesByIDs(httpConnection, data, expected):
         return None
 
     try:
+        print("data to send:\n")
+        print(dataToSend)
         r = httpConnection.GET("/get-resources-by-ids", dataToSend)
     except Exception:
         pytest.fail("Failed to send GET request")
@@ -623,6 +639,8 @@ ids = ['Success', 'Failure']
 @pytest.mark.parametrize(dataColumns, createTestData, ids=ids)
 def test_GetResourcesByCategory(httpConnection, data, expected):
     try:
+        print("data to send:\n")
+        print(data)
         r = httpConnection.GET("/get-resources-by-category", data)
     except Exception:
         pytest.fail("Failed to send GET request")
