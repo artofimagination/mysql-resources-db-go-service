@@ -8,8 +8,8 @@ networks:
       - subnet: 172.18.0.0/24
 
 services:
-  system-mysql:
-    container_name: system-mysql
+  resources-db:
+    container_name: resources-db
     image: mysql:8.0.21
     ports:
       - ${MYSQL_DB_PORT}:3306
@@ -28,10 +28,10 @@ services:
     networks:
       - development
     depends_on: 
-      - system-mysql
+      - resources-db
     environment:
       LOG_LEVEL: debug
-      MYSQL_DB_ADDRESS: system-mysql
+      MYSQL_DB_ADDRESS: resources-db
       MYSQL_DB_USER: ${MYSQL_DB_USER-root}
       MYSQL_DB_PORT: ${MYSQL_DB_PORT}
       MYSQL_DB_PASSWORD: ${MYSQL_DB_PASSWORD-123secure}
