@@ -56,7 +56,7 @@ func updateResource(resource *models.Resource, tx *sql.Tx) error {
 	}
 
 	if affected == 0 {
-		return rollbackWithErrorStack(tx, errors.WithStack(ErrResourcesMissing))
+		return rollbackWithErrorStack(tx, ErrResourcesMissing)
 	}
 
 	return nil
@@ -110,7 +110,7 @@ func deleteResource(resourceID string, tx *sql.Tx) error {
 	}
 
 	if affected == 0 {
-		return rollbackWithErrorStack(tx, errors.WithStack(ErrResourcesMissing))
+		return rollbackWithErrorStack(tx, ErrResourcesMissing)
 	}
 	return nil
 }
