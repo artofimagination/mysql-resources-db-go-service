@@ -5,7 +5,7 @@ import pytest
 
 class HTTPConnector():
     def __init__(self):
-        self.URL = "http://127.0.0.1:8080"
+        self.URL = "http://0.0.0.0:8080"
         connected = False
         timeout = 30
         while timeout > 0:
