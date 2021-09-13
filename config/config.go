@@ -5,7 +5,7 @@ const AppName = "mysql-resources-db-go-service"
 var AppVersion string
 
 type Config struct {
-	Port       int  `mapstructure:"port" default:"8080"`
+	Port       int  `mapstructure:"server_port" default:"8080"`
 	DebugPProf bool `mapstructure:"debug_pprof" default:"false"`
 
 	MySQLDBAddress            string `mapstructure:"mysql_db_address" validate:"required"`

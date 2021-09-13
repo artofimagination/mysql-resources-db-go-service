@@ -2,6 +2,7 @@ package initialization
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
@@ -38,7 +39,9 @@ func (r *runner) start(name string, start startFn, stop stopFn) {
 	})
 
 	start(errorCh)
+	fmt.Println("-------------------------------------------------------------")
 	log.Info(context.Background(), name+" started")
+	fmt.Println("-------------------------------------------------------------")
 }
 
 func (r *runner) stop() {

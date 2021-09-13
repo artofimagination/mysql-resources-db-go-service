@@ -13,13 +13,6 @@ import (
 
 var ErrResourcesMissing = errors.New("This resources is missing or old value is the same as new")
 
-const addResourceQuery = `
-	INSERT INTO 
-	resources(id, category, content) 
-	VALUES 
-	(UUID_TO_BIN(?), ?, CAST(CONVERT(? USING utf8) AS JSON))
-`
-
 func rollbackWithErrorStack(tx *sql.Tx, errorStack error) error {
 	if err := tx.Rollback(); err != nil {
 		errorString := fmt.Sprintf("%s\n%s\n", errorStack.Error(), err.Error())
@@ -27,6 +20,13 @@ func rollbackWithErrorStack(tx *sql.Tx, errorStack error) error {
 	}
 	return errorStack
 }
+
+const addResourceQuery = `
+	INSERT INTO 
+	resources(id, category, content) 
+	VALUES 
+	(UUID_TO_BIN(?), ?, CAST(CONVERT(? USING utf8) AS JSON))
+`
 
 func addResource(resource *models.Resource, tx *sql.Tx) error {
 	// Execute transaction
@@ -56,7 +56,7 @@ func updateResource(resource *models.Resource, tx *sql.Tx) error {
 	}
 
 	if affected == 0 {
-		return rollbackWithErrorStack(tx, errors.WithStack(ErrResourcesMissing))
+		return rollbackWithErrorStack(tx, ErrResourcesMissing)
 	}
 
 	return nil
@@ -110,7 +110,7 @@ func deleteResource(resourceID string, tx *sql.Tx) error {
 	}
 
 	if affected == 0 {
-		return rollbackWithErrorStack(tx, errors.WithStack(ErrResourcesMissing))
+		return rollbackWithErrorStack(tx, ErrResourcesMissing)
 	}
 	return nil
 }

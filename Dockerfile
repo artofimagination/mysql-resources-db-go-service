@@ -3,6 +3,7 @@ ARG EXECUTABLE_NAME=mysql-resources-db-go-service
 FROM golang:1.15.2-alpine
 
 ARG EXECUTABLE_NAME
+ARG SERVER_PORT
 
 ENV ROOT_PACKAGE=github.com/artofimagination/$EXECUTABLE_NAME
 
@@ -15,7 +16,7 @@ RUN go build -ldflags "-X $ROOT_PACKAGE/config.AppVersion=$APP_VERSION" main.go
 
 RUN chmod 0766 $GOPATH/src/$ROOT_PACKAGE/scripts/init.sh
 
-EXPOSE 8080
+EXPOSE $SERVER_PORT
 
 # Run the executable
 CMD ["./scripts/init.sh"]
