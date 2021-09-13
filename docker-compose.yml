@@ -8,32 +8,37 @@ networks:
       - subnet: 172.18.0.0/24
 
 services:
-  resources-db:
-    container_name: resources-db
+  resources-mysql:
+    container_name: ${RESOURCES_MYSQL_DB_ADDRESS}
     image: mysql:8.0.21
     ports:
-      - ${MYSQL_DB_PORT}:3306
+      - ${RESOURCES_MYSQL_DB_EXPOSED_PORT}:${RESOURCES_MYSQL_DB_PORT}
       - 33060:33060
     networks:
       - development
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_DB_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DB_NAME}
-  main-server:
-    build: ./
-    container_name: main-server
-    image: artofimagination/main-server
+      MYSQL_ROOT_PASSWORD: ${RESOURCES_MYSQL_DB_PASSWORD}
+      MYSQL_DATABASE: ${RESOURCES_MYSQL_DB_NAME}
+  resources-db-server:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      args:
+        SERVER_PORT: ${RESOURCES_SERVER_PORT}
+    container_name: resources-db-server
+    image: artofimagination/resources-db-server
     ports:
-      - "8080:8080"
+      - ${RESOURCES_SERVER_PORT}:${RESOURCES_SERVER_PORT}
     networks:
       - development
     depends_on: 
-      - resources-db
+      - ${RESOURCES_MYSQL_DB_ADDRESS}
     environment:
       LOG_LEVEL: debug
-      MYSQL_DB_ADDRESS: resources-db
-      MYSQL_DB_USER: ${MYSQL_DB_USER-root}
-      MYSQL_DB_PORT: ${MYSQL_DB_PORT}
-      MYSQL_DB_PASSWORD: ${MYSQL_DB_PASSWORD-123secure}
-      MYSQL_DB_NAME: ${MYSQL_DB_NAME-resource_database}
-      MYSQL_DB_MIGRATION_DIR: ${MYSQL_DB_MIGRATION_DIR-$GOPATH/src/github.com/artofimagination/mysql-resources-db-go-service/db/migrations/mysql}
+      SERVER_PORT: ${RESOURCES_SERVER_PORT}
+      MYSQL_DB_ADDRESS: ${RESOURCES_MYSQL_DB_ADDRESS}
+      MYSQL_DB_USER: ${RESOURCES_MYSQL_DB_USER-root}
+      MYSQL_DB_PORT: ${RESOURCES_MYSQL_DB_PORT}
+      MYSQL_DB_PASSWORD: ${RESOURCES_MYSQL_DB_PASSWORD-123secure}
+      MYSQL_DB_NAME: ${RESOURCES_MYSQL_DB_NAME-resource_database}
+      MYSQL_DB_MIGRATION_DIR: ${RESOURCES_MYSQL_DB_MIGRATION_DIR-$GOPATH/src/github.com/artofimagination/mysql-resources-db-go-service/db/migrations/mysql}

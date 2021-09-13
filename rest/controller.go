@@ -48,7 +48,7 @@ func (c *controller) Start() {
 	}
 
 	c.echoEngine.GET("/", func(eCtx echo.Context) error {
-		return eCtx.String(http.StatusOK, "Hi! I am a user database server!")
+		return eCtx.String(http.StatusOK, "Hi! I am a resources database server!")
 	})
 
 	c.echoEngine.GET("/healthcheck", func(eCtx echo.Context) error {
