@@ -12,7 +12,7 @@ def getPort():
         for line in envFile:
             name, var = line.partition("=")[::2]
             variables[name.strip()] = var
-        return variables["RESOURCES_SERVER_PORT"]
+        return variables["RESOURCE_DB_PORT"]
 
 
 class HTTPConnector():

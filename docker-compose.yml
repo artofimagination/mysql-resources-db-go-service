@@ -9,7 +9,7 @@ networks:
 
 services:
   resources-mysql:
-    container_name: ${RESOURCES_MYSQL_DB_ADDRESS}
+    container_name: ${RESOURCE_DB_NAME}
     image: mysql:8.0.21
     ports:
       - ${RESOURCES_MYSQL_DB_EXPOSED_PORT}:${RESOURCES_MYSQL_DB_PORT}
@@ -24,19 +24,19 @@ services:
       context: ./
       dockerfile: Dockerfile
       args:
-        SERVER_PORT: ${RESOURCES_SERVER_PORT}
+        SERVER_PORT: ${RESOURCE_DB_PORT}
     container_name: resources-db-server
     image: artofimagination/resources-db-server
     ports:
-      - ${RESOURCES_SERVER_PORT}:${RESOURCES_SERVER_PORT}
+      - ${RESOURCE_DB_PORT}:${RESOURCE_DB_PORT}
     networks:
       - development
     depends_on: 
-      - ${RESOURCES_MYSQL_DB_ADDRESS}
+      - resources-mysql
     environment:
       LOG_LEVEL: debug
-      SERVER_PORT: ${RESOURCES_SERVER_PORT}
-      MYSQL_DB_ADDRESS: ${RESOURCES_MYSQL_DB_ADDRESS}
+      SERVER_PORT: ${RESOURCE_DB_PORT}
+      MYSQL_DB_ADDRESS: ${RESOURCE_DB_NAME}
       MYSQL_DB_USER: ${RESOURCES_MYSQL_DB_USER-root}
       MYSQL_DB_PORT: ${RESOURCES_MYSQL_DB_PORT}
       MYSQL_DB_PASSWORD: ${RESOURCES_MYSQL_DB_PASSWORD-123secure}
